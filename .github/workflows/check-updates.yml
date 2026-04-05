@@ -1,0 +1,52 @@
+# =============================================================================
+# Data Freshness Check — Monthly scheduled re-ingestion check
+# =============================================================================
+#
+# Runs monthly to check for new CSIRT-CY publications and trigger ingestion
+# if new data is available. Also runnable manually via workflow_dispatch.
+#
+# =============================================================================
+
+name: Check Data Updates
+
+on:
+  schedule:
+    # First Monday of each month at 06:00 UTC
+    - cron: "0 6 1-7 * 1"
+  workflow_dispatch:
+
+jobs:
+  check-updates:
+    name: Check for New CSIRT-CY Data
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run ingestion check
+        run: npm run ingest
+        env:
+          CSIRTCY_DB_PATH: data/csirt-cy.db
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Data Freshness Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Source | CSIRT-CY (https://www.csirt.cy/) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Run date | $(date -u +%Y-%m-%d) |" >> "$GITHUB_STEP_SUMMARY"
