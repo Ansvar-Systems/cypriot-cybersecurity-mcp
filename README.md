@@ -4,7 +4,7 @@
 
 [![npm version](https://badge.fury.io/js/%40ansvar%2Fcypriot-cybersecurity-mcp.svg)](https://www.npmjs.com/package/@ansvar/cypriot-cybersecurity-mcp)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![CI](https://github.com/Ansvar-Systems/cypriot-cybersecurity-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Ansvar-Systems/cypriot-cybersecurity-mcp/actions/workflows/ci.yml)
+[![Build](https://github.com/Ansvar-Systems/cypriot-cybersecurity-mcp/actions/workflows/ghcr-build.yml/badge.svg)](https://github.com/Ansvar-Systems/cypriot-cybersecurity-mcp/actions/workflows/ghcr-build.yml)
 
 Query Cypriot cybersecurity data -- regulations, decisions, and requirements from CSIRT-CY (Digital Security Authority) -- directly from Claude, Cursor, or any MCP-compatible client.
 
@@ -117,7 +117,7 @@ All content is sourced from official Cypriot regulatory publications:
 - Freshness checks run via GitHub Actions workflows
 - Last-updated timestamps in tool responses indicate data age
 
-See `sources.yml` for full provenance metadata.
+See [COVERAGE.md](COVERAGE.md) for full provenance metadata.
 
 ---
 
@@ -167,7 +167,6 @@ git clone https://github.com/Ansvar-Systems/cypriot-cybersecurity-mcp
 cd cypriot-cybersecurity-mcp
 npm install
 npm run build
-npm test
 ```
 
 ### Running Locally
@@ -180,8 +179,8 @@ npx @anthropic/mcp-inspector node dist/index.js   # Test with MCP Inspector
 ### Data Management
 
 ```bash
-npm run build:db       # Rebuild SQLite database from seed data
-npm run check-updates  # Check for new regulatory data
+npm run ingest   # Ingest data from CSIRT-CY
+npm run seed     # Seed with sample data
 ```
 
 ---
@@ -218,7 +217,7 @@ Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ### Data Licenses
 
-Regulatory data sourced from official government publications. See `sources.yml` for per-source licensing details.
+Regulatory data sourced from official government publications. See [COVERAGE.md](COVERAGE.md) for per-source licensing details.
 
 ---
 
