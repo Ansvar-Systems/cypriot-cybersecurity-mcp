@@ -26,6 +26,7 @@ import {
   searchAdvisories,
   getAdvisory,
   listFrameworks,
+  getDb,
 } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -153,6 +154,24 @@ const TOOLS = [
       required: [],
     },
   },
+  {
+    name: "cy_cyber_list_sources",
+    description: "List all data sources used by this MCP server with provenance metadata: name, URL, last ingestion date, scope, and known limitations.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "cy_cyber_check_data_freshness",
+    description: "Check data freshness for each source. Reports the ingestion date, estimated staleness, and whether an update is recommended.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 // --- Zod schemas for argument validation --------------------------------------
@@ -221,7 +240,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           status: parsed.status,
           limit: parsed.limit,
         });
-        return textContent({ results, count: results.length });
+        return textContent({
+          results,
+          count: results.length,
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
+        });
       }
 
       case "cy_cyber_get_guidance": {
@@ -230,7 +256,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!doc) {
           return errorContent(`Guidance document not found: ${parsed.reference}`);
         }
-        return textContent(doc);
+        return textContent({
+          ...doc,
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+            data_age: doc.date ?? "unknown",
+          },
+        });
       }
 
       case "cy_cyber_search_advisories": {
@@ -240,7 +273,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           severity: parsed.severity,
           limit: parsed.limit,
         });
-        return textContent({ results, count: results.length });
+        return textContent({
+          results,
+          count: results.length,
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
+        });
       }
 
       case "cy_cyber_get_advisory": {
@@ -249,12 +289,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!advisory) {
           return errorContent(`Advisory not found: ${parsed.reference}`);
         }
-        return textContent(advisory);
+        return textContent({
+          ...advisory,
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+            data_age: advisory.date ?? "unknown",
+          },
+        });
       }
 
       case "cy_cyber_list_frameworks": {
         const frameworks = listFrameworks();
-        return textContent({ frameworks, count: frameworks.length });
+        return textContent({
+          frameworks,
+          count: frameworks.length,
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
+        });
       }
 
       case "cy_cyber_about": {
@@ -270,6 +324,64 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             frameworks: "NIS2 framework, national cybersecurity strategy, CSIRT-CY guidance series",
           },
           tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
+        });
+      }
+
+      case "cy_cyber_list_sources": {
+        return textContent({
+          sources: [
+            {
+              name: "CSIRT-CY — Cyprus Computer Security Incident Response Team",
+              url: "https://www.csirt.cy/",
+              scope: "Cybersecurity guidelines, national strategy, NIS2 implementation, security advisories",
+              license: "Public domain / government publication",
+              limitations: "Coverage depends on ingestion crawler; may not include all published documents",
+            },
+          ],
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
+        });
+      }
+
+      case "cy_cyber_check_data_freshness": {
+        let guidanceCount = 0;
+        let advisoryCount = 0;
+        let latestGuidance: string | null = null;
+        let latestAdvisory: string | null = null;
+        try {
+          const database = getDb();
+          guidanceCount = (database.prepare("SELECT COUNT(*) as c FROM guidance").get() as { c: number }).c;
+          advisoryCount = (database.prepare("SELECT COUNT(*) as c FROM advisories").get() as { c: number }).c;
+          latestGuidance = (database.prepare("SELECT MAX(date) as d FROM guidance").get() as { d: string | null }).d;
+          latestAdvisory = (database.prepare("SELECT MAX(date) as d FROM advisories").get() as { d: string | null }).d;
+        } catch {
+          // db may be empty or unavailable
+        }
+        return textContent({
+          sources: [
+            {
+              name: "CSIRT-CY guidance",
+              record_count: guidanceCount,
+              latest_record_date: latestGuidance,
+              update_recommended: guidanceCount === 0,
+            },
+            {
+              name: "CSIRT-CY advisories",
+              record_count: advisoryCount,
+              latest_record_date: latestAdvisory,
+              update_recommended: advisoryCount === 0,
+            },
+          ],
+          _meta: {
+            disclaimer: "This tool is not regulatory or legal advice. Verify all references against primary sources.",
+            source_url: "https://www.csirt.cy/",
+          },
         });
       }
 
