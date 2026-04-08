@@ -1,0 +1,32 @@
+{
+  "schema_version": "1",
+  "mcp": "cypriot-cybersecurity-mcp",
+  "jurisdiction": "CY",
+  "sources": [
+    {
+      "id": "csirt-cy",
+      "name": "CSIRT-CY — Cyprus Computer Security Incident Response Team",
+      "url": "https://www.csirt.cy/",
+      "authority": "Digital Security Authority of Cyprus",
+      "scope": [
+        "Cybersecurity guidelines",
+        "National cybersecurity strategy",
+        "NIS2 implementation guidance",
+        "Security advisories",
+        "Incident alerts"
+      ],
+      "document_types": ["directive", "guideline", "standard", "recommendation"],
+      "series": ["NIS2", "CSIRT-CY-guideline", "national-strategy"],
+      "language": ["el", "en"],
+      "license": "Public domain / government publication",
+      "ingestion_script": "scripts/ingest-csirt-cy.ts",
+      "update_frequency": "monthly",
+      "known_limitations": [
+        "Coverage depends on web crawler accessibility",
+        "Historical documents may be incomplete",
+        "Some documents available only in Greek"
+      ]
+    }
+  ],
+  "last_updated": "2026-04-05"
+}
