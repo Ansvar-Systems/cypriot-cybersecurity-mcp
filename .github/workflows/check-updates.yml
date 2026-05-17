@@ -1,52 +1,50 @@
-# =============================================================================
-# Data Freshness Check — Monthly scheduled re-ingestion check
-# =============================================================================
-#
-# Runs monthly to check for new CSIRT-CY publications and trigger ingestion
-# if new data is available. Also runnable manually via workflow_dispatch.
-#
-# =============================================================================
-
-name: Check Data Updates
-
+name: Freshness Check
 on:
   schedule:
-    # First Monday of each month at 06:00 UTC
-    - cron: "0 6 1-7 * 1"
+    - cron: '0 8 * * 1'  # Weekly, Monday 08:00 UTC
   workflow_dispatch:
 
 jobs:
-  check-updates:
-    name: Check for New CSIRT-CY Data
+  check:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Build
-        run: npm run build
-
-      - name: Run ingestion check
-        run: npm run ingest
-        env:
-          CSIRTCY_DB_PATH: data/csirt-cy.db
-
-      - name: Summary
-        if: always()
+      - name: Check freshness
+        id: freshness
         run: |
-          echo "## Data Freshness Check" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Source | CSIRT-CY (https://www.csirt.cy/) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Run date | $(date -u +%Y-%m-%d) |" >> "$GITHUB_STEP_SUMMARY"
+          npm run freshness:check
+          echo "stale=$(cat .freshness-stale)" >> $GITHUB_OUTPUT
+
+      - name: Create issue if stale
+        if: steps.freshness.outputs.stale == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('.freshness-report', 'utf8');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'data-freshness',
+              state: 'open'
+            });
+            if (existing.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Data staleness alert - ${new Date().toISOString().split('T')[0]}`,
+                body: summary,
+                labels: ['data-freshness', 'automated']
+              });
+            }
