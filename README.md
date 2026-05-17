@@ -168,7 +168,15 @@ Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ### Data Licenses
 
-Regulatory data sourced from official government publications. See [COVERAGE.md](COVERAGE.md) for per-source licensing details.
+**License code:** `Cyprus-PSI` — statutory Cyprus public-sector information re-use regime.
+
+**Statutory basis:** Cyprus Law 143(I)/2021 transposes [EU Directive 2019/1024](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019L1024) on Open Data and the re-use of public sector information. Article 8 of the directive mandates commercial re-use of public-sector documents.
+
+CSIRT-CY is part of the Digital Security Authority of Cyprus, a public-sector body within scope of Law 143(I)/2021. On-publisher acknowledgement at [csirt.cy/about-us/open-information](https://csirt.cy/about-us/open-information) cites Cyprus Law 184(I)/2017 (Right of Access to Public Sector Information) and the corresponding publication scheme; re-use rights flow from the companion statute Law 143(I)/2021.
+
+Commercial reuse, derivatives, and redistribution are permitted with attribution. See `sources.yml` for the anchored URL pattern and full provenance metadata.
+
+Attribution: "Source: National CSIRT-CY, Digital Security Authority, Republic of Cyprus. Reproduced under Cyprus public-sector information re-use regime (Law 143(I)/2021, transposing EU Directive 2019/1024)."
 
 ---
 
